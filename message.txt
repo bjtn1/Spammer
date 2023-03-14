@@ -1,0 +1,3 @@
+/ban commanderroot
+/ban saddestkitty
+/ban rubberslayer
