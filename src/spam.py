@@ -6,16 +6,23 @@
 import argparse
 import os
 import time
+from threading import Thread
 
 import pyautogui
+from pynput import keyboard
+
+
+def on_press(key):
+    try:
+        if key == keyboard.Key.shift:
+            # Exit the program if the user presses 'q'
+            print("Exiting...")
+            return False
+    except AttributeError:
+        pass
 
 
 def countdown(time_in_seconds: int) -> None:
-    """Displays a countdown timer
-
-    Args:
-        time_in_seconds (int): Time in seconds
-    """
     while time_in_seconds:
         mins, secs = divmod(time_in_seconds, 60)
         timer = f"{mins:02d}:{secs:02d}"
@@ -24,18 +31,31 @@ def countdown(time_in_seconds: int) -> None:
         time_in_seconds -= 1
 
 
+def spam_every_line(lines_list: list[str], time_in_seconds: int) -> None:
+    countdown(time_in_seconds)
+
+    for line in lines_list:
+        pyautogui.typewrite(f"{line}\n")
+
+
+def spam_every_word(words_list: list[str], time_in_seconds: int) -> None:
+    countdown(time_in_seconds)
+
+    for word in words_list:
+        pyautogui.typewrite(f"{word}\n")
+
+
 def main():
-    # TODO Add epilog
     parser = argparse.ArgumentParser(
         prog="spam",
-        description="Writes every line or word from a .txt file to cursor",
+        description="A program that writes every line or word from a .txt file to wherever cursor is placed",  # noqa
     )
 
     parser.add_argument("file", help="Path to a .txt file")
 
     parser.add_argument(
         "write",
-        help="Write every line or word from .txt file",
+        help="Write every word or line in .txt file",
         choices=["line", "word"],
     )
 
@@ -51,24 +71,22 @@ def main():
 
     path_to_file: str = os.path.abspath(args.file)
     wait_time_in_seconds: int = args.time
-    what_to_write: str = args.write  # This is either "word" or "line"
-
-    countdown(wait_time_in_seconds)
-
-    # exit(0)
+    what_to_write: str = args.write
 
     with open(path_to_file, "r") as file:
         lines = file.read().splitlines()
-
-        # Obtain every word from every line in the file
         words = [word for line in lines for word in line.split()]
 
     if what_to_write == "line":
-        for line in lines:
-            pyautogui.typewrite(f"{line}\n")
+        spam_every_line(lines, wait_time_in_seconds)
+
+    elif what_to_write == "word":
+        spam_every_word(words, wait_time_in_seconds)
+
     else:
-        for word in words:
-            pyautogui.typewrite(f"{word}\n")
+        exit(
+            "Unrecognized parameter. Chosose either word or line for what to type."  # noqa
+        )
 
 
 if __name__ == "__main__":
